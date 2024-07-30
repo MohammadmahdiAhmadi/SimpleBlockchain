@@ -1,0 +1,8 @@
+Dockerfile.backend  
+Dockerfile.frontend
+Makefile
+compose.yaml
+*.md
+screenshots
+.gitignore
+__pycache__

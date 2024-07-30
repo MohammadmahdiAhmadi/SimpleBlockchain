@@ -1,0 +1,141 @@
+version: '3.8'
+
+volumes:
+  backend_data:
+
+services:
+  backend1:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8000
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: b3b6eedc5d6967c94aa2d65f9e0b77f34d9a7cde2b699d2b9039776cc92519900ee89b76732fc210ee91120b0dece9cef9518ad30d906c0b8f78919b6e87219c
+    network_mode: "host"
+    volumes:
+      - .:/app
+      - "backend_data:/app/data"
+
+  backend2:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8001
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: 170eafeb66af1148c1dde8e1f6619e27ff347405e6346ce3e74c1e180addc494dc2bdce50d29e16b900bbbdbd7ba5d62b9cf9731f05abbd2395868f187e72bd8
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  backend3:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8002
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: 4801063b2ac7877cd1da71d2c81dd53793c00e09c1a23e9baa746d576564e911a93d3b32863e7ffc45130bb4db1f28b07eeabf7d1537ff65b35baf3766b574cc
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  backend4:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8003
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: ac59ce8fa4a27aea6c7108c7e7b5d19914570cc0434493ffe542f02831f03bdf4bccebbc7b148e6dcddc6b0d11fbfe321d779e82f555146af90b69d73d601163
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  backend5:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8004
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: 033543b24f982bf18675e46f1ed5a71e9d2d4ebc3fdb69f33a0765d06946bdf4a1cc668825f32ab5fe57f4dc263f4b53395f4aed12a413d3b8ba1ddd814d0fd5
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  backend6:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8005
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: ec9565a9901e23d1a5c2ba3176a171e27fd258abc6cdc56a388fc48e2b62a21096da033093c84d1b5f0bd8164a2f4e8969a29eddde84c2b54b037f3f73e9879d
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  backend7:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8006
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: 2dec4704bae3e951ea75dee9524982b58db293b6950661c1b6bd358736ca950f94d2d0074c48e026b5e7c15f12424e02b077ac7a85d355ae2bd3b2e4df394522
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  backend8:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: simple-blockchain-backend
+    environment:
+      NODE_IP: 127.0.0.1
+      NODE_PORT: 8007
+      SEED_NODE: http://127.0.0.1:8000
+      COINBASE_BENEFICIARY: d4d70971b62ed60ac329843c11933245855216aef640cbf59981da1f0735f2d4b990cb752383c8e9103e5baf3605e2c49d0a8cacf4909db13b5c74f2ccaabb43
+    depends_on:
+      - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app
+  
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: simple-blockchain-frontend
+    environment:
+      FLASK_RUN_PORT: 5000
+      CONNECTED_NODE_ADDRESS: http://127.0.0.1:8000
+      FRONTEND_ADDRESS: http://127.0.0.1:5000
+    depends_on:
+        - backend1
+    network_mode: "host"
+    volumes:
+      - .:/app

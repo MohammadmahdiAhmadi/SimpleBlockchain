@@ -1,0 +1,6 @@
+*.pyc
+**/*.pyc
+.venv
+.vscode
+chain_bkp.json
+.env

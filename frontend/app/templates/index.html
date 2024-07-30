@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blockchain Interface</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        .scrolling-wrapper {
+            overflow-x: scroll;
+            display: flex;
+            flex-wrap: nowrap;
+        }
+        .card {
+            flex: 0 0 auto;
+            width: 300px;
+            margin-right: 15px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .transaction-form {
+            max-width: 600px;
+            margin-left: 20px;
+        }
+        .left-section {
+            position: fixed;
+            left: 0;
+            top: 56px;
+            bottom: 0;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .right-section {
+            position: fixed;
+            right: 0;
+            top: 56px;
+            bottom: 0;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .blockchain-container {
+            margin-top: 20px;
+            margin-left: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .tx-container {
+            margin-top: 20px;
+            margin-right: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .wallet-card {
+            margin-bottom: 20px;
+        }
+        .wallet-card button {
+            margin-top: 10px;
+        }
+    </style>
+
+    <script>
+        {% set cleaned_node_address = node_address | replace("http://", "") %}
+        const nodeAddresses = {{ node_addresses|tojson }};
+    
+        let blockchainData;
+
+        const presetWallets = [
+            {
+                publicKey: 'b3b6eedc5d6967c94aa2d65f9e0b77f34d9a7cde2b699d2b9039776cc92519900ee89b76732fc210ee91120b0dece9cef9518ad30d906c0b8f78919b6e87219c',
+                privateKey: '70be25a77c65ddde6a0f85d796c68212dd915424511d5a63792ed69966cacf19'
+            },
+            {
+                publicKey: '170eafeb66af1148c1dde8e1f6619e27ff347405e6346ce3e74c1e180addc494dc2bdce50d29e16b900bbbdbd7ba5d62b9cf9731f05abbd2395868f187e72bd8',
+                privateKey: '36b3f400f34ca48354a7f074fe7588ee5b575d1e6a6785a311315f381d32476e'
+            },
+            {
+                publicKey: '4801063b2ac7877cd1da71d2c81dd53793c00e09c1a23e9baa746d576564e911a93d3b32863e7ffc45130bb4db1f28b07eeabf7d1537ff65b35baf3766b574cc',
+                privateKey: 'a08c0bd4a24e51e43f051a9ad684bdcaf66c97bee41922619c3e11c268861738'
+            },
+            {
+                publicKey: 'ac59ce8fa4a27aea6c7108c7e7b5d19914570cc0434493ffe542f02831f03bdf4bccebbc7b148e6dcddc6b0d11fbfe321d779e82f555146af90b69d73d601163',
+                privateKey: '9982e93acaa91dcac885b689667e9455e02f216b47265aaf348eff51cb324e2a'
+            },
+            {
+                publicKey: '033543b24f982bf18675e46f1ed5a71e9d2d4ebc3fdb69f33a0765d06946bdf4a1cc668825f32ab5fe57f4dc263f4b53395f4aed12a413d3b8ba1ddd814d0fd5',
+                privateKey: '9361fba2c8d3a458150962fece1c14517a21e5eb1559062832b6300ae320983e'
+            },
+            {
+                publicKey: 'ec9565a9901e23d1a5c2ba3176a171e27fd258abc6cdc56a388fc48e2b62a21096da033093c84d1b5f0bd8164a2f4e8969a29eddde84c2b54b037f3f73e9879d',
+                privateKey: '78da76a1c697f25f19bd403c3a5e9fb21068ba18e01c4f7c10c38bf4d0d62d4a'
+            },
+            {
+                publicKey: '2dec4704bae3e951ea75dee9524982b58db293b6950661c1b6bd358736ca950f94d2d0074c48e026b5e7c15f12424e02b077ac7a85d355ae2bd3b2e4df394522',
+                privateKey: '767094588802c23a4f811e76a416194761514270208391c2e7b1db135b1efa8c'
+            },
+            {
+                publicKey: 'd4d70971b62ed60ac329843c11933245855216aef640cbf59981da1f0735f2d4b990cb752383c8e9103e5baf3605e2c49d0a8cacf4909db13b5c74f2ccaabb43',
+                privateKey: 'd41f884bc7511d1c9bbd799f66a8696745971d797cd5312fe71af07efd8bbadb'
+            }
+        ];
+    
+        // Function to fetch UTXO data from the blockchain
+        async function getLatestBlockUTXOPool() {
+            const response = await fetch('{{node_address}}/chain');
+            blockchainUTXOData = await response.json();
+
+            const latestBlock = blockchainData.chain[blockchainData.chain.length - 1];
+            const utxoPool = [];
+
+            Object.keys(latestBlock.utxo_pool).forEach(key => {
+                const utxo = latestBlock.utxo_pool[key];
+                utxoPool.push(utxo);
+            });
+
+            return utxoPool;
+        }
+
+        // Function to generate a new wallet
+        async function generateWalletNoClipboard() {
+            const response = await fetch('{{node_address}}/generate_wallet');
+            const walletData = await response.json();
+            const walletDataNewFormat = {}
+            walletDataNewFormat['public_key'] = walletData['publicKey']
+            walletDataNewFormat['private_key'] = walletData['privateKey']
+            return walletData;
+        }
+
+        // Function to save wallet data
+        function saveWalletData(wallet) {
+            let wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+            wallets.push(wallet);
+            localStorage.setItem('wallets', JSON.stringify(wallets));
+        }
+
+        // Function to get all saved wallets
+        function getSavedWallets() {
+            return JSON.parse(localStorage.getItem('wallets')) || [];
+        }
+
+        let is_set_preset_wallet = JSON.parse(localStorage.getItem('is_set_preset_wallet')) || false;
+        if (is_set_preset_wallet === false) {
+            let wallets = JSON.parse(localStorage.getItem('wallets')) || [];
+            wallets = [...new Set([...wallets, ...presetWallets])];
+            localStorage.setItem('wallets', JSON.stringify(wallets));
+            localStorage.setItem('is_set_preset_wallet', true);
+        }
+
+        // Function to create a random transaction
+        async function createRandomTransaction() {
+            // localStorage.removeItem('wallets');
+            try {
+                // Get the UTXO pool from the latest block
+                const utxoPool = await getLatestBlockUTXOPool();
+                
+                if (utxoPool.length === 0) {
+                    alert('No UTXOs available.');
+                    return;
+                }
+
+                // Get saved wallets
+                const savedWallets = getSavedWallets();
+
+                // Select random UTXO
+                const randomUTXOIndex = Math.floor(Math.random() * utxoPool.length);
+                const selectedUTXO = utxoPool[randomUTXOIndex];
+
+                // Decide whether to use an existing wallet or create a new one as recipient
+                let recipientWallet;
+                let recipientPublicKey;
+                // recipientWallet = await generateWalletNoClipboard();
+                // saveWalletData(recipientWallet);
+                // recipientPublicKey = recipientWallet.publicKey;
+                
+                if (Math.random() < 0.5 || savedWallets.length === 0) {  // 50% chance to generate a new wallet
+                    recipientWallet = await generateWalletNoClipboard();
+                    saveWalletData(recipientWallet);
+                    recipientPublicKey = recipientWallet.publicKey;
+                    console.log(1)
+                } else {
+                    do {
+                        const randomWalletIndex = Math.floor(Math.random() * savedWallets.length);
+                        recipientWallet = savedWallets[randomWalletIndex];
+                        console.log(2)
+                    } while (recipientWallet.publicKey === selectedUTXO.public_key);  // Ensure recipient is not the sender
+                    recipientPublicKey = recipientWallet.publicKey;
+                }
+                
+                const from = selectedUTXO.public_key;
+                const to = recipientPublicKey;
+                const amount = parseFloat((Math.random() * (selectedUTXO.amount / 3)).toFixed(1));  // Send a rounded (1 decimal) random portion of the balance
+                
+                const pp = savedWallets.find(item => item.publicKey === from);
+                const fromPrivateKey = pp.privateKey
+                console.log({ from, to, amount, private_key: fromPrivateKey });
+    
+                // Sign the transaction
+                const response = await fetch('{{node_address}}/sign_transaction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from, to, amount, private_key: fromPrivateKey })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to sign transaction');
+                }
+
+                const signature = await response.text();
+
+                // Submit the transaction
+                const submitResponse = await fetch(`{{node_address}}/new_transaction`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input_public_key: from, output_public_key: to, amount, signature })
+                });
+
+                const result = await submitResponse.text();
+            } catch (error) {
+                console.error('Error creating random transaction:', error);
+            }
+        }
+
+        // Function to call createRandomTransaction 1000 times
+        async function createRandomTransactions1000Times() {
+            for (let i = 0; i < 1000; i++) {
+                await createRandomTransaction();
+            }
+        }
+
+        async function fetchChain() {
+            const response = await fetch('{{node_address}}/chain');
+            blockchainData = await response.json();
+            
+            const chainOutput = document.getElementById('chain-output');
+            chainOutput.innerHTML = '';
+
+            // Reverse the order of blocks
+            const reversedChain = blockchainData.chain.slice().reverse();
+
+            reversedChain.forEach(block => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">Block ${block.index}</h5>
+                        <p class="card-text">Hash: ${block.hash}</p>
+                        <p class="card-text">Previous Hash: ${block.previous_hash.slice(-10)}</p>
+                        <p class="card-text">Nonce: ${block.nonce}</p>
+                        <p class="card-text">Timestamp: ${new Date(block.timestamp * 1000).toLocaleString()}</p>
+                        <a href="{{frontend_address}}/block?index=${block.index}&node_address={{node_address}}" class="btn btn-primary">View Details</a>
+                    </div>
+                `;
+                chainOutput.appendChild(card);
+            });
+
+            // Display peer nodes in the navbar dropdown
+            const peersDropdown = document.getElementById('peers-dropdown');
+            peersDropdown.innerHTML = blockchainData.peers.map(peer => `<a class="dropdown-item" href="{{frontend_address}}/?node_address=${peer}">${peer}</a>`).join('');
+        }
+
+        async function generateWallet() {
+            try {
+                const response = await fetch('{{node_address}}/generate_wallet');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                
+                const publicKey = data.publicKey;
+                const privateKey = data.privateKey;
+
+                const output = `Public Key: ${publicKey}\nPrivate Key: ${privateKey}`;
+                
+                // Copy to clipboard
+                copyToClipboard(output)
+            } catch (error) {
+                console.error('Error generating wallet:', error);
+                alert('Failed to generate wallet. Please try again later.');
+            }
+        }
+
+        // Function to sanitize HTML to prevent XSS attacks
+        function sanitizeHtml(text) {
+            const element = document.createElement('div');
+            element.innerText = text;
+            return element.innerHTML;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard');
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                alert('Failed to copy text. Please try again.');
+            });
+        }
+
+        async function signTransaction() {
+            const from = document.getElementById('tx-from').value;
+            const to = document.getElementById('tx-to').value;
+            const amount = document.getElementById('tx-amount').value;
+            const privateKey = document.getElementById('tx-private-key').value;
+
+            try {
+                const response = await fetch('{{node_address}}/sign_transaction', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ from, to, amount, private_key: privateKey })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const signature = await response.text();
+                document.getElementById('tx-signature').value = signature;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function submitTransaction() {
+            const inputPublicKey = document.getElementById('tx-from').value;
+            const outputPublicKey = document.getElementById('tx-to').value;
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const signature = document.getElementById('tx-signature').value;
+
+            try {
+                const response = await fetch(`{{node_address}}/new_transaction`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ input_public_key: inputPublicKey, output_public_key: outputPublicKey, amount, signature })
+                });
+                const result = await response.text();
+                alert(`Response from {{node_address}}: ${result}`);
+            } catch (error) {
+                console.error('Error submitting transaction to', 'nodeAddress', error);
+            }
+        }
+
+        function toggleCustomInput(id) {
+            var selectElement = document.getElementById(id);
+            var customInputElement = document.getElementById(id + '-custom');
+            if (selectElement.value === 'custom') {
+                customInputElement.style.display = 'block';
+            } else {
+                customInputElement.style.display = 'none';
+            }
+        }
+
+        window.onload = fetchChain;
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{{frontend_address}}/">Blockchain Interface</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" id="create-random-transaction" href="#" onclick="createRandomTransaction()">Create Random Transaction</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="generateWallet()">Generate Wallet</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{frontend_address}}/mempool?node_address={{node_address}}">View Mempool</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Peers
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="peers-dropdown">
+                        <!-- Peers will be populated here -->
+                    </div>
+                </li>
+            </ul>
+            <span class="navbar-text ml-auto">
+                Connected to {{cleaned_node_address}}
+            </span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 left-section">
+                <div class="section blockchain-container">
+                    <h2>Blockchain</h2>
+                    <div class="scrolling-wrapper" id="chain-output"></div>
+                </div>
+            </div>
+            <div class="col-md-3 right-section">
+                <div class="transaction-form tx-container">
+                    <h2>Create Transaction</h2>
+                    
+                    <!-- From (Public Key) -->
+                    <div class="form-group">
+                        <label for="tx-from">From (Public Key):</label>
+                        <select class="form-control" id="tx-from" onchange="toggleCustomInput('tx-from')">
+                            <option value="1ad4154a06f1126a504737f501fd05e1e76eecd9538ae1f497ca31144e9ec96aa59d4fe155888a07af75321ad45309596fd8dd48ef59414bb134968b6b0d7f42">PublicKey 1</option>
+                            <option value="4e522bd2270e0c517273a7265bef24b776d05a7a4a80b6694e225fb90388862f4def213b72f60d910f7da75cb78e3f27f938b74426563c896eb9b2380e62396f">PublicKey 2</option>
+                            <option value="bf596e3e90cadae7ab8e24bf64ec1046b9e1de326e1eba52511d952366948e1fe7907a3c2142f77360cf71a25558cde9056ac114af8e7bfb20d87dcd8bc9cb4b">PublicKey 3</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="text" class="form-control mt-2" id="tx-from-custom" placeholder="Enter Public Key" style="display:none;">
+                    </div>
+                
+                    <!-- To (Public Key) -->
+                    <div class="form-group">
+                        <label for="tx-to">To (Public Key):</label>
+                        <select class="form-control" id="tx-to" onchange="toggleCustomInput('tx-to')">
+                            <option value="4e522bd2270e0c517273a7265bef24b776d05a7a4a80b6694e225fb90388862f4def213b72f60d910f7da75cb78e3f27f938b74426563c896eb9b2380e62396f">PublicKey 2</option>
+                            <option value="bf596e3e90cadae7ab8e24bf64ec1046b9e1de326e1eba52511d952366948e1fe7907a3c2142f77360cf71a25558cde9056ac114af8e7bfb20d87dcd8bc9cb4b">PublicKey 3</option>
+                            <option value="1ad4154a06f1126a504737f501fd05e1e76eecd9538ae1f497ca31144e9ec96aa59d4fe155888a07af75321ad45309596fd8dd48ef59414bb134968b6b0d7f42">PublicKey 1</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="text" class="form-control mt-2" id="tx-to-custom" placeholder="Enter Public Key" style="display:none;">
+                    </div>
+                
+                    <!-- Amount -->
+                    <div class="form-group">
+                        <label for="tx-amount">Amount:</label>
+                        <select class="form-control" id="tx-amount" onchange="toggleCustomInput('tx-amount')">
+                            <option value="2">2 SB</option>
+                            <option value="3">3 SB</option>
+                            <option value="5">5 SB</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="text" class="form-control mt-2" id="tx-amount-custom" placeholder="Enter Amount (SB)" style="display:none;">
+                    </div>
+                
+                    <!-- Private Key -->
+                    <div class="form-group">
+                        <label for="tx-private-key">Private Key:</label>
+                        <select class="form-control" id="tx-private-key" onchange="toggleCustomInput('tx-private-key')">
+                            <option value="836dccb5180e02e8bb8e0582c7b87ad02964b004175d77017e02d3d8b078cee9">PrivateKey 1</option>
+                            <option value="46ed927a188d8fbff4c7f4129f2c08ae16c9f0cfca26e6b35f7105a09c84a2f7">PrivateKey 2</option>
+                            <option value="5f290cccd5f72d69ab19bf4f61b5b1888873f426efe545dff9601486cc39bd6d">PrivateKey 3</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="text" class="form-control mt-2" id="tx-private-key-custom" placeholder="Enter Private Key" style="display:none;">
+                    </div>
+                
+                    <button class="btn btn-primary" onclick="signTransaction()">Sign Transaction</button>
+                    <div class="form-group mt-3">
+                        <input type="text" class="form-control" id="tx-signature" placeholder="Signature" readonly>
+                    </div>
+                    <button class="btn btn-primary" onclick="submitTransaction()">Submit Transaction</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

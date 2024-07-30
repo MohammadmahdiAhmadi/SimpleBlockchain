@@ -1,0 +1,13 @@
+FROM python:3.11  AS builder
+
+RUN mkdir /app
+COPY requirements.txt /app
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM builder AS final
+
+COPY . /app
+ENV FLASK_RUN_SERVER_NAME=0.0.0.0
+EXPOSE 5000
+ENTRYPOINT [ "python", "frontend/run.py" ]
