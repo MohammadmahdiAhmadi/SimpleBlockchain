@@ -35,46 +35,6 @@ The backend is structured as follows:
 - **consensus.py**: Functions for consensus and announcing blocks, transactions, and peers.
 - **config.py**: Configuration file for blockchain settings.
 
-## Directory Structure
-.
-├── backend
-│ ├── run.py
-│ ├── node_config.py
-│ ├── app
-│ │ ├── init.py
-│ │ └── routes.py
-│ ├── core
-│ │ ├── init.py
-│ │ ├── block.py
-│ │ ├── blockchain.py
-│ │ ├── config.py
-│ │ ├── consensus.py
-│ │ ├── crypto.py
-│ │ ├── transaction.py
-│ │ ├── utils.py
-│ │ └── utxo.py
-│ └── tests
-│ ├── data
-│ │ └── chain_bkp.json
-├── frontend
-│ ├── run.py
-│ ├── app
-│ │ ├── init.py
-│ │ ├── config.py
-│ │ ├── views.py
-│ │ ├── nodes_connection.py
-│ │ ├── templates
-│ │ │ ├── base.html
-│ │ │ ├── block.html
-│ │ │ ├── index.html
-│ │ │ └── mempool.html
-└── requirements.txt
-├── Makefile
-├── Dockerfile.backend
-├── Dockerfile.frontend
-├── compose.yaml
-└── README.md
-
 ## Getting Started
 
 ### Prerequisites
