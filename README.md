@@ -16,15 +16,16 @@ This project is a simple blockchain implementation featuring basic functionaliti
 ## Frontend
 The frontend is built using Flask, HTML, CSS, and JavaScript. It includes the following pages:
 ### Home page
+![Home page](./screenshots/home.png)
 - Sign and create transactions
 - View chain of blocks
 - View peers
 - Generate wallet on the home page
 - Connect to random blockchain nodes (user can choose node IP)
 ### Block page
-- View block details
+![Home page](./screenshots/block.png)
 ### Mempool Page
-- View mempool on the mempool page
+![Home page](./screenshots/mempool.png)
 
 ## Backend
 The backend is structured as follows:
